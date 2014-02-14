@@ -13,6 +13,7 @@ var bot = new irc.Client(config.server, config.botName, {
 });
 
 var singing = false;
+var lyricsArray = [];
 
 function makeLyricRequest(url, artist, song, from) {
   // using request library
@@ -47,8 +48,8 @@ function makeLyricRequest(url, artist, song, from) {
       });      
 
       // get lyrics and replace with | to allow for split
-      lyrics = $('.lyricbox').text();
-      lyrics.replace(/(\,|\!|\?|\)|[a-z])([A-Z])/, '$1|$2');
+      var lyrics = $('.lyricbox').text();
+      lyrics.replace(/(\,|\!|\?|\'|\)|[a-z])([A-Z])/, '$1|$2');
       lyricsArray = lyrics.split("|").slice(0, 10);
       
       var time = 0
@@ -62,27 +63,30 @@ function makeLyricRequest(url, artist, song, from) {
           bot.say(config.channels[0], line);
         
           if (idx == 9) {
-            singing = false;
             normalFinish = true;
-            bot.say(config.channels[0], "Okay, I'm done singing. You may now request a new song.");
+            doneSinging();
           }
         }, time);
       });
       
       setTimeout(function () {
-        if (normalFinish == false) {
-          singing = false;
-          bot.say(config.channels[0], "Okay, I'm done singing. You may now request a new song.");
-        }
+        if (normalFinish == false) { doneSinging(); }
       }, time + 50);
     }
   });
 }
 
+function doneSinging() {
+  singing = false;
+  bot.say(config.channels[0], "Okay, I'm done singing. You may now request a new song.");
+}
+
 bot.addListener("message", function (from, to, text, message) {
-  if (text.match(/(L|l)yrics(B|b)ot\ssing/)) {
+  if (text.match(/^(L|l)yrics(B|b)ot\shelp$/)) {
+    bot.say(config.channels[0], "Request a song by typing \"LyricsBot sing [artist]:[song]\".");
+  } else if (text.match(/(L|l)yrics(B|b)ot\ssing/)) {
     if (singing == false) {      
-      var artistSongRegExp = /sing\s(.+)\-(.+)/g;
+      var artistSongRegExp = /sing\s(.+)\:(.+)/g;
       var match = artistSongRegExp.exec(text);
 
       if (match != null) {
