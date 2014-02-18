@@ -3,7 +3,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-	channels: ["#"],
+	channels: ["#appacademy"],
 	server: "irc.foonetic.net",
   botName: "LyricsBot"
 };
@@ -70,7 +70,9 @@ function makeLyricRequest(url, artist, song, from) {
       });
       
       setTimeout(function () {
-        if (normalFinish == false) { doneSinging(); }
+        if (normalFinish == false) {
+          doneSinging();
+        }
       }, time + 50);
     }
   });
@@ -93,7 +95,9 @@ bot.addListener("message", function (from, to, text, message) {
         var artist = match[1].replace(/\s\w/g, function (txt) {
           return '_' + txt.charAt(1).toUpperCase();
         });
-        var song = match[2].replace(/\s/g, '_');
+        var song = match[2].replace(/\s\w/g, function (txt) {
+          return '_' + txt.charAt(1).toUpperCase();
+        });
         
         // artist = artist.charAt(0).toUpperCase() + artist.slice(1);
     
