@@ -3,17 +3,46 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-	channels: ["#appacademy"],
-	server: "irc.foonetic.net",
+  channels: ["#"],
+  server: "irc.foonetic.net",
   botName: "LyricsBot"
 };
 
 var bot = new irc.Client(config.server, config.botName, {
-	channels: config.channels
+  channels: config.channels
 });
 
 var singing = false;
 var lyricsArray = [];
+
+bot.addListener("message", function (from, to, text, message) {
+  if (text.match(/^(L|l)yrics(B|b)ot\shelp$/)) {
+    bot.say(config.channels[0], "Request a song by typing \"LyricsBot sing [artist]:[song]\".");
+  } else if (text.match(/(L|l)yrics(B|b)ot\ssing/)) {
+    if (singing == false) {      
+      var artistSongRegExp = /sing\s(.+)\:(.+)/g;
+      var match = artistSongRegExp.exec(text);
+
+      if (match != null) {
+        var artist = match[1].replace(/\s\w/g, function (txt) {
+          return '_' + txt.charAt(1).toUpperCase();
+        });
+        var song = match[2].replace(/\s\w/g, function (txt) {
+          return '_' + txt.charAt(1).toUpperCase();
+        });
+        
+        // artist = artist.charAt(0).toUpperCase() + artist.slice(1);
+    
+        console.log(artist)
+        console.log(song)
+    
+        var url = 'http://lyrics.wikia.com/' + artist + ':' + song;
+        
+        makeLyricRequest(url, artist, song, from);
+      }
+    }
+  }
+});
 
 function makeLyricRequest(url, artist, song, from) {
   // using request library
@@ -82,32 +111,3 @@ function doneSinging() {
   singing = false;
   bot.say(config.channels[0], "Okay, I'm done singing. You may now request a new song.");
 }
-
-bot.addListener("message", function (from, to, text, message) {
-  if (text.match(/^(L|l)yrics(B|b)ot\shelp$/)) {
-    bot.say(config.channels[0], "Request a song by typing \"LyricsBot sing [artist]:[song]\".");
-  } else if (text.match(/(L|l)yrics(B|b)ot\ssing/)) {
-    if (singing == false) {      
-      var artistSongRegExp = /sing\s(.+)\:(.+)/g;
-      var match = artistSongRegExp.exec(text);
-
-      if (match != null) {
-        var artist = match[1].replace(/\s\w/g, function (txt) {
-          return '_' + txt.charAt(1).toUpperCase();
-        });
-        var song = match[2].replace(/\s\w/g, function (txt) {
-          return '_' + txt.charAt(1).toUpperCase();
-        });
-        
-        // artist = artist.charAt(0).toUpperCase() + artist.slice(1);
-    
-        console.log(artist)
-        console.log(song)
-    
-        var url = 'http://lyrics.wikia.com/' + artist + ':' + song;
-        
-        makeLyricRequest(url, artist, song, from);
-      }
-    }
-  }
-});
