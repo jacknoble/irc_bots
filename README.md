@@ -17,4 +17,5 @@ Both bots utilize the [Node.js IRC](https://github.com/martynsmith/node-irc) lib
 + Add song lookup by artist
 
 ### RyanBot
+##### To-Do's
 + Needs more functionality
