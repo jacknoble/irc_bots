@@ -12,13 +12,13 @@ var bot = new irc.Client(config.server, config.botName, {
   channels: config.channels
 });
 
-var singing = false;
+var singing      = false;
 var songFinished = false;
-var lyricsArray = [];
+var lyricsArray  = [];
 
 var currentLine = 0;
-var startLine = 0;
-var numLines = 10;
+var startLine   = 0;
+var numLines    = 10;
 
 bot.addListener("message", function (from, to, text, message) {
   if (text.match(/^(L|l)yrics(B|b)ot\shelp$/)) {
@@ -30,30 +30,30 @@ bot.addListener("message", function (from, to, text, message) {
       var match = artistSongRegExp.exec(text);
 
       if (match != null) {
-        var artist = match[1].replace(/\s\w/g, function (txt) {
-          return '_' + txt.charAt(1).toUpperCase();
-        });
-        var song = match[2].replace(/\s\w/g, function (txt) {
-          return '_' + txt.charAt(1).toUpperCase();
-        });
-        
-        // artist = artist.charAt(0).toUpperCase() + artist.slice(1);
-    
-        console.log(artist)
-        console.log(song)
-    
-        var url = 'http://lyrics.wikia.com/' + artist + ':' + song;
+        var artist = parseString(match[1]);
+        var song   = parseString(match[2]);
+        var url    = 'http://lyrics.wikia.com/' + artist + ':' + song;
         
         makeLyricRequest(url, artist, song, from);
       }
     }
   } else if (text.match(/(L|l)yrics(B|b)ot\scontinue/)) {
-    if (singing == false && lyricsArray.length > 0 && currentLine < lyricsArray.length - 1) {
+    if (singing == false && lyricsArray.length > 0 && songFinished == false) {
       startLine = currentLine;
       sing(startLine, numLines);
     }
   }
 });
+
+function doneSinging() {
+  singing = false;
+  
+  if (songFinished) {
+    bot.say(config.channels[0], "Song finished! You may request a new song.");
+  } else {
+    bot.say(config.channels[0], "You may have me continue singing the next lines of the current song or request a new song.");
+  }
+}
 
 function makeLyricRequest(url, artist, song, from) {
   bot.say(config.channels[0], "Fetching lyrics...");
@@ -62,9 +62,7 @@ function makeLyricRequest(url, artist, song, from) {
   request(url, function (err, resp, body) {
     if (err) { throw err; }
     
-    // set LyricsBot's singing status to true and songFinished to false
-    singing = true;
-    songFinished = false;
+    resetBotStatus();
 
     // load response body to allow for jQuery functionality server-side
     $ = cheerio.load(body);
@@ -101,6 +99,28 @@ function makeLyricRequest(url, artist, song, from) {
   });
 }
 
+function parseString(string) {
+  return string.replace(/\s\w/g, function (txt) {
+    return '_' + txt.charAt(1).toUpperCase();
+  });
+}
+
+// remove empty lines from lyrics
+function removeSpaces() {
+  for (var idx = lyricsArray.length - 1; idx >= 0; idx--) {
+    if (lyricsArray[idx] == "") {
+      lyricsArray.splice(idx, 1);
+    }
+  }
+}
+
+// reset LyricsBot's singing status, songFinished, and numLines
+function resetBotStatus() {
+  numLines     = 10;
+  singing      = true;
+  songFinished = false;
+}
+
 function sing(startLine, numLines) {
   var time = 0;
   currentLine = startLine;
@@ -118,31 +138,11 @@ function sing(startLine, numLines) {
       bot.say(config.channels[0], lyricsArray[currentLine]);
       currentLine++;
       
-      if (currentLine == lyricsArray.length) {
-        songFinished = true;
-      }
+      if (currentLine == lyricsArray.length) { songFinished = true; }
     }, time);
   }
   
   setTimeout(function () {
     doneSinging()
   }, time + 50);
-}
-
-function doneSinging() {
-  singing = false;
-  
-  if (songFinished) {
-    bot.say(config.channels[0], "Song finished! You may request a new song.");
-  } else {
-    bot.say(config.channels[0], "You may have me continue singing the next lines of the current song or request a new song.");
-  }
-}
-
-function removeSpaces() {
-  for (var idx = lyricsArray.length - 1; idx >= 0; idx--) {
-    if (lyricsArray[idx] == "") {
-      lyricsArray.splice(idx, 1);
-    }
-  }
 }
