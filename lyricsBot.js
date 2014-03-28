@@ -3,7 +3,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channels: ["#"],
+  channels: ["#appacademy"],
   server: "irc.foonetic.net",
   botName: "LyricsBot"
 };
@@ -112,14 +112,13 @@ function sing(startLine, numLines) {
   }
   
   for (var line = startLine; line < endLine; line++) {
-    time += 25;
+    time += 2500;
     
     setTimeout(function () {      
       bot.say(config.channels[0], lyricsArray[currentLine]);
       currentLine++;
       
       if (currentLine == lyricsArray.length) {
-        console.log("SONG FINISHED");
         songFinished = true;
       }
     }, time);
