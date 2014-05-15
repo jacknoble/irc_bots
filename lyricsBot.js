@@ -3,7 +3,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channels: ["#appacademy"],
+  channels: ["#"],
   server: "irc.foonetic.net",
   botName: "LyricsBot"
 };
