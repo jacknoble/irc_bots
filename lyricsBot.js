@@ -3,9 +3,9 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channels: ["#"],
+  channels: ["#bestcohort"],
   server: "irc.foonetic.net",
-  botName: "LyricsBot"
+  botName: "LyricsDubs"
 };
 
 var bot = new irc.Client(config.server, config.botName, {
