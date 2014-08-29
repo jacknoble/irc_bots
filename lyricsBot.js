@@ -3,9 +3,9 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channels: ["#bestcohort"],
-  server: "irc.foonetic.net",
-  botName: "LyricsDubs"
+  channels: [""],
+  server: "",
+  botName: "LyricsBot"
 };
 
 var bot = new irc.Client(config.server, config.botName, {
@@ -33,7 +33,7 @@ bot.addListener("message", function (from, to, text, message) {
         var artist = parseString(match[1]);
         var song   = parseString(match[2]);
         var url    = 'http://lyrics.wikia.com/' + artist + ':' + song;
-        
+
         makeLyricRequest(url, artist, song, from);
       }
     }
@@ -47,7 +47,7 @@ bot.addListener("message", function (from, to, text, message) {
 
 function doneSinging() {
   singing = false;
-  
+
   if (songFinished) {
     bot.say(config.channels[0], "Song finished! You may request a new song.");
   } else {
@@ -57,11 +57,11 @@ function doneSinging() {
 
 function makeLyricRequest(url, artist, song, from) {
   bot.say(config.channels[0], "Fetching lyrics...");
-  
+
   // using request library
   request(url, function (err, resp, body) {
     if (err) { throw err; }
-    
+
     resetBotStatus();
 
     // load response body to allow for jQuery functionality server-side
@@ -70,9 +70,9 @@ function makeLyricRequest(url, artist, song, from) {
     // if lyrics do not exist
     if ($('.lyricbox').text() == "") {
       var redirectLink = $('.redirectText').find('a').attr('href');
-      
+
       singing = false;
-      
+
       // check for redirect link, if it exists, pull lyrics
       if (redirectLink != '' && redirectLink != null && redirectLink != undefined) {
         url = 'http://lyrics.wikia.com/' + redirectLink.slice(1);
@@ -83,16 +83,19 @@ function makeLyricRequest(url, artist, song, from) {
     } else {
       // remove ad HTML
       $('.rtMatcher').html('');
-      
+
       $('br').each(function () {
         $(this).replaceWith('|')
-      });      
+      });
+
+      // remove stupid JS script and irrelevant div
+      $('.lyricbox script, .lyricbox div').remove()
 
       // get lyrics and replace with | to allow for split
       var lyrics = $('.lyricbox').text();
       lyrics.replace(/(\,|\!|\?|\'|\)|[a-z])([A-Z])/, '$1|$2');
       lyricsArray = lyrics.split("|");
-      
+
       removeSpaces();
       sing(0, numLines);
     }
@@ -124,24 +127,24 @@ function resetBotStatus() {
 function sing(startLine, numLines) {
   var time = 0;
   currentLine = startLine;
-  
+
   if (startLine + numLines < lyricsArray.length) {
     endLine = startLine + numLines;
   } else {
     endLine = lyricsArray.length;
   }
-  
+
   for (var line = startLine; line < endLine; line++) {
     time += 2500;
-    
-    setTimeout(function () {      
+
+    setTimeout(function () {
       bot.say(config.channels[0], lyricsArray[currentLine]);
       currentLine++;
-      
+
       if (currentLine == lyricsArray.length) { songFinished = true; }
     }, time);
   }
-  
+
   setTimeout(function () {
     doneSinging()
   }, time + 50);
