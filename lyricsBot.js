@@ -37,7 +37,7 @@ bot.addListener('message', function (from, to, text, message) {
     var artistSongRegExp = /sing (.+)[\.\|\\\-:!,/](.+)/gi;
     var match = artistSongRegExp.exec(text);
     extractInfoAndMakeLyricsRequest(match, from);
-    toCompletion = text.match(/forr?ealz/i);
+    toCompletion = text.match(/forr?ealz(ies)?/i);
 
   } else if (text.match(/lyricsbot continue/i) && !singing && !songFinished && currentLyrics.length > 0) {
     sing(currentLine, defaultNumLines);
