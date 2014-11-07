@@ -3,8 +3,8 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channels: [''],
-  server: '',
+  channels: ['#appacademy'],
+  server: 'irc.foonetic.net',
   botName: 'LyricsBot'
 };
 
@@ -22,25 +22,36 @@ var currentLyrics = [];
 
 var currentLine = 0;
 var defaultNumLines = 10;
+var song = null;
+var toCompletion = false;
 
 bot.addListener('message', function (from, to, text, message) {
   if (from.match(/bot/i)) {
     return;
+  
   } else if (text.match(/^lyricsbot( help)?$/i)) {
     bot.output('Request a song by typing "LyricsBot sing [artist]:[song]".');
     bot.output('Continue current song by typing "LyricsBot continue".');
 
   } else if (text.match(/lyricsbot sing/i) && !singing) {
-    var artistSongRegExp = /sing (.+)[\.\|\\:!-,/](.+)/gi;
+    var artistSongRegExp = /sing (.+)[\.\|\\\-:!,/](.+)/gi;
     var match = artistSongRegExp.exec(text);
-    extractInfoAndMakeLyricsRequest(match);
+    extractInfoAndMakeLyricsRequest(match, from);
+    toCompletion = text.match(/forr?ealz/i);
 
   } else if (text.match(/lyricsbot continue/i) && !singing && !songFinished && currentLyrics.length > 0) {
     sing(currentLine, defaultNumLines);
+    toCompletion = text.match(/forr?ealz(ies)?/i);
+  
+  } else if (text.match(/lyricsbot st(op|ahp)/i)) {
+    stopSinging();
+    bot.output('Ok.');
+  } else if (text.match(/lyricsbot dance/i)) {
+    dance();
   }
 });
 
-function extractInfoAndMakeLyricsRequest(match) {
+function extractInfoAndMakeLyricsRequest(match, from) {
   if (!match) return;
 
   var artist = parseString(match[1]);
@@ -100,7 +111,7 @@ function removeJankFromPage($) {
 function parseLyrics(el) {
   currentLyrics = el
     .text()
-    .replace(/([\?\),!'a-z])([A-Z])/, '$1|$2')
+    .replace(/([\?\),!'a-z])([A-Z])/g, '$1|$2')
     .split('|')
     .filter(function (line) {
       return line !== '';
@@ -113,23 +124,29 @@ function sing(startLine, numLines) {
 
   currentLine = startLine;
   var endLine = Math.min(startLine + numLines, currentLyrics.length);
+  if (toCompletion) endLine = currentLyrics.length;
 
-  var song = setInterval(function () {
+  song = setInterval(function () {
     bot.output(currentLyrics[currentLine]);
     currentLine++;
     songFinished = currentLine == currentLyrics.length;
-
-    if (currentLine == endLine) {
-      clearInterval(song);
-      doneSinging();
-    }
+    if (currentLine == endLine) doneSinging();
   }, 2500);
 }
 
+function stopSinging() {
+  clearInterval(song);
+  singing = false;  
+}
+
 function doneSinging() {
-  singing = false;
+  stopSinging();
+  bot.output(songFinished ? 'Song finished! You may request a new song.' : 
+    'You may have me continue singing the next lines of the current song or request a new song.');
+}
 
-  var response = songFinished ? 'Song finished! You may request a new song.' : 'You may have me continue singing the next lines of the current song or request a new song.';
-
-  bot.output(response);
+function dance() {
+  setTimeout(function () { bot.output('/me dances :D-<'); }, 2000);
+  setTimeout(function () { bot.output('/me dances :D|-<'); }, 4000);
+  setTimeout(function () { bot.output('/me dances :D/-<'); }, 6000);
 }
