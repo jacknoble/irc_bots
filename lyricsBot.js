@@ -3,8 +3,8 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channels: ['#appacademy'],
-  server: 'irc.foonetic.net',
+  channel: [process.env.IRC_CHANNEL],
+  server: process.env.IRC_SERVER,
   botName: 'LyricsBot'
 };
 
