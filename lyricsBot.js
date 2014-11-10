@@ -58,7 +58,7 @@ function extractInfoAndMakeLyricsRequest(match, from) {
   var song   = parseString(match[2]);
   var url    = 'http://lyrics.wikia.com/' + artist + ':' + song;
 
-  makeLyricsRequest(url, artist, song, from);
+  makeLyricsRequest(url, from);
 }
 
 // convert spaces to snake_Camelcase
@@ -68,17 +68,17 @@ function parseString(string) {
   });
 }
 
-function makeLyricsRequest(url, artist, song, from) {
+function makeLyricsRequest(url, from) {
   bot.output('Fetching lyrics...');
 
   request(url, function (error, response, body) {
-    if (error) { throw error; }
+    if (error) throw error;
 
     // load response body to allow for jQuery functionality server-side
     var $ = cheerio.load(body);
 
     if ($('.lyricbox').text() == '') {
-      handleLyricsRedirect($);
+      handleLyricsRedirect($, from);
     } else {
       removeJankFromPage($);
       parseLyrics($('.lyricbox'));
@@ -88,11 +88,11 @@ function makeLyricsRequest(url, artist, song, from) {
 }
 
 // check for redirect link, if it exists, pull lyrics
-function handleLyricsRedirect($) {
+function handleLyricsRedirect($, from) {
   var redirectLink = $('.redirectText a').attr('href');
   if (redirectLink) {
     var newUrl = 'http://lyrics.wikia.com/' + redirectLink.slice(1);
-    makeLyricsRequest(newUrl, artist, song, from);
+    makeLyricsRequest(newUrl, from);
   } else {
     bot.output('Sorry ' + from + ', that artist or song was not found.');
   }
