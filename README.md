@@ -11,7 +11,6 @@ Both bots utilize the [Node.js IRC](https://github.com/martynsmith/node-irc) lib
 + Sends out timed lines of lyrics into channel
 
 ##### To-Do's
-+ ~~Code needs to be refactored...~~
 + ~~Continue singing song after 10 lines are through if requested~~
 + Add random song
 + Add ability to provide number flag to print out that many lines of lyrics
