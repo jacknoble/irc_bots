@@ -3,7 +3,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 
 var config = {
-  channel: [process.env.IRC_CHANNEL],
+  channels: [process.env.IRC_CHANNEL],
   server: process.env.IRC_SERVER,
   botName: 'LyricsBot'
 };
@@ -20,10 +20,10 @@ var singing       = false;
 var songFinished  = false;
 var currentLyrics = [];
 
-var currentLine = 0;
+var currentLine     = 0;
 var defaultNumLines = 10;
-var song = null;
-var toCompletion = false;
+var song            = null;
+var toCompletion    = false;
 
 bot.addListener('message', function (from, to, text, message) {
   if (from.match(/bot/i)) {
@@ -46,8 +46,10 @@ bot.addListener('message', function (from, to, text, message) {
   } else if (text.match(/lyricsbot st(op|ahp)/i)) {
     stopSinging();
     bot.output('Ok.');
+    
   } else if (text.match(/lyricsbot dance/i)) {
     dance();
+    
   }
 });
 
